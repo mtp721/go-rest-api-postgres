@@ -1,7 +1,8 @@
-#Assignment
+# Assignment
+
 Rest API written in GO using Postgres, Gin, lib/pq and database/sql
 
-##Endpoints:
+## Endpoints:
 
 • POST /employees --registers a new employee in the system--
 • GET /employees --returns the list of all micobo employees--
