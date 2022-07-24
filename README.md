@@ -1,6 +1,6 @@
 # Assignment
 
-Rest API written in GO using Postgres, Gin, lib/pq and database/sql
+Rest API written in GO using Postgres, Gin, lib/pq and database/sql. With tests using httptest and sqlmock.
 
 ## Endpoints:
 

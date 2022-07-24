@@ -61,7 +61,7 @@ func (h handler) PostEmployee(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusCreated, gin.H{"message": employee})
+	c.IndentedJSON(http.StatusCreated, employee)
 
 }
 
@@ -70,13 +70,13 @@ func (h handler) PutEmployee(c *gin.Context) {
 	var employee models.Employee
 	id := c.Param("id")
 
-	//Query employee with the specified id
+	//Query employee with the specified id and store old values
 	row := h.DB.QueryRow("SELECT * FROM employees WHERE id = $1", id)
 	if err := row.Scan(&employee.ID, &employee.FirstName, &employee.LastName, &employee.BirthDay, &employee.Gender); err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Error querying db: " + err.Error()})
 		return
 	}
-	//Override values of employee with values from request
+	//Override values of employee with updated values from request
 	if err := c.BindJSON(&employee); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "binding error: " + err.Error()})
 		return
@@ -84,11 +84,13 @@ func (h handler) PutEmployee(c *gin.Context) {
 	//Update employee in db
 	updRow := h.DB.QueryRow("UPDATE employees SET first_name = $1, last_name = $2, birthday = $3, gender = $4 WHERE id = $5 RETURNING *",
 		employee.FirstName, employee.LastName, employee.BirthDay, employee.Gender, id)
+
+	//Write returned values from db to employee to make sure values were updated correctly
 	if err := updRow.Scan(&employee.ID, &employee.FirstName, &employee.LastName, &employee.BirthDay, &employee.Gender); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Error updating employee: " + err.Error()})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"message": employee})
+	c.IndentedJSON(http.StatusOK, employee)
 }
 
 // delete employee from db
@@ -100,7 +102,7 @@ func (h handler) DeleteEmployee(c *gin.Context) {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Error deleting employee: " + err.Error()})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"message": employee})
+	c.IndentedJSON(http.StatusOK, employee)
 }
 
 // Returns a list of all events
@@ -142,7 +144,7 @@ func (h handler) GetEvent(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": event})
+	c.IndentedJSON(http.StatusOK, event)
 }
 
 /*returns the list of the employees that are attending the event specified by event_id,
@@ -152,7 +154,6 @@ func (h handler) GetEmployeesForEvent(c *gin.Context) {
 	eventId := c.Param("id")
 	accommodation := c.Query("accommodation")
 
-	println(accommodation)
 	var accommodationQuery string
 	switch accommodation {
 	case "true":
@@ -164,7 +165,7 @@ func (h handler) GetEmployeesForEvent(c *gin.Context) {
 	}
 
 	query := fmt.Sprintf(`SELECT id, first_name, last_name, birthday, gender FROM employees JOIN attendances 
-		ON attendances.employee_id = employees.id WHERE event_id = $1 %s ORDER BY id`, accommodationQuery)
+		ON attendances.employee_id = employees.id WHERE attendances.event_id = $1 %s ORDER BY id`, accommodationQuery)
 
 	rows, err := h.DB.Query(query, eventId)
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
 	"github.com/mtp721/micobo-assignment/pkg/db"
 	"github.com/mtp721/micobo-assignment/pkg/handlers"
 )
